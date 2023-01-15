@@ -43,7 +43,7 @@ class Recorder:
 
         self.hideText = False
 
-    def record(self, maxTime=7 * 24 * 60 * 60):
+    def record(self, maxTime=7 * 24 * 60 * 60, verbose = True):
         self.starting_time_of_recording = time.time()
         self.start_block()
         while time.time() - self.starting_time_of_recording < maxTime:
@@ -57,6 +57,10 @@ class Recorder:
 
             if self.check_block_trigger():
                 self.trigger_new_block()
+
+            if verbose:
+                clear_output()
+                self.display_settings()
 
         time.sleep(0.02)
 
