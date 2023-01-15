@@ -119,7 +119,7 @@ class Recorder:
 
     def output(self):
         report = self.generate_report()
-        with open(self.save_directory + "\\" + str(self.last_date_time) + ".txt", "a", encoding="utf-8") as file:
+        with open(self.save_directory + "\\" + str(self.last_date_time).replace(";","-") + ".txt", "a", encoding="utf-8") as file:
             file.write(report)
 
     def generate_report(self):
