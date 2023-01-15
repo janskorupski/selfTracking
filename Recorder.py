@@ -184,6 +184,7 @@ class Recorder:
         print("Seconds from last mouse movement: " + str(round(timetime - self.last_mouse_movement)))
         print("active: " + str(self.last_active_state))
         print("last report: " + str(round(timetime - self.last_block_trigger)))
+        print("recording: " + str(self.do_record) )
 
 
 if __name__ == "__main__":
