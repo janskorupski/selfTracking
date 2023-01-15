@@ -82,8 +82,8 @@ class Recorder:
 
     def check_active(self):
         now = time.time()
-        return self.time_before_inactive < now - self.last_keyboard_stroke or \
-               self.time_before_inactive < now - self.last_mouse_movement
+        return self.time_before_inactive > now - self.last_keyboard_stroke or \
+               self.time_before_inactive > now - self.last_mouse_movement
 
     def lookup_blacklist(self):
         window_text = GetWindowText(GetForegroundWindow())
