@@ -27,9 +27,9 @@ class Recorder:
 
         # block data
         self.last_block_trigger = time.time()
-        self.handler = False  # Handler from keyboard package. False indicates no active handler.
+        self.handler = None  # Handler from keyboard package. False indicates no active handler.
         self.last_window = GetWindowText(GetForegroundWindow())
-        self.handle = False  # Handle from keyboard package - the object returned by handler.
+        self.handle = None  # Handle from keyboard package - the object returned by handler.
         self.keys_pressed = ""
         self.text_written = ""
         self.last_date_time = ""
@@ -84,7 +84,7 @@ class Recorder:
 
     def end_block(self):
         self.handle = keyboard.stop_recording()
-        self.handler = False
+        self.handler = None
         self.keys_pressed = self.extract_keys_pressed(self.handle)
         self.text_written = self.extract_text_written(self.handle)
         self.output()
@@ -147,15 +147,15 @@ class Recorder:
         pass
 
     def display_settings(self):
-        settingString = "|| settings    ||\n"
-        settingString += f"|| refreshrate  : {self.max_block_time}\n"
-        settingString += f"|| saveRate     : {1}\n"
-        settingString += f"|| timeInactive : {self.time_before_inactive}\n"
-        settingString += f"|| saveDir      : {self.save_directory}"
+        setting_string = "|| settings    ||\n"
+        setting_string += f"|| refresh rate  : {self.max_block_time}\n"
+        setting_string += f"|| save rate     : {1}\n"
+        setting_string += f"|| time inactive : {self.time_before_inactive}\n"
+        setting_string += f"|| saveDir      : {self.save_directory}"
 
         clear_output(wait=True)
         timetime = time.time()
-        print(settingString)
+        print(setting_string)
         print("Seconds from last keyboard stroke: " + str(round(timetime - self.last_keyboard_stroke)))
         print("Seconds from last mouse movement: " + str(round(timetime - self.last_mouse_movement)))
         print("active: " + str(self.last_active_state))
