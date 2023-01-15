@@ -22,6 +22,11 @@ class Recorder:
         self.max_block_time = maxBlockTime
         self.time_before_inactive = timeInactive
         self.save_directory = saveDir
+        self.recorder_blacklist = [] # list of windows, for which no recording should be made
+        if os.path.exists("recorder_blacklist.txt"):
+            with open( "recorder_blacklist.txt", "r") as file:
+                for line in file.readlines():
+                    self.recorder_blacklist.append(line.lower())
 
         self.starting_time_of_recording = time.time()
 
@@ -41,7 +46,8 @@ class Recorder:
         self.last_keyboard_stroke = time.time()
         self.last_text_length = 0
 
-        self.hideText = False
+        # boolean ticks
+        self.do_record = True
 
     def record(self, maxTime=7 * 24 * 60 * 60, verbose = True):
         self.starting_time_of_recording = time.time()
@@ -55,7 +61,17 @@ class Recorder:
 
             self.update_activity()
 
-            if self.check_block_trigger():
+            black_list = self.lookup_blacklist()
+            if self.do_record:
+                if black_list:
+                    self.end_block()
+                    self.do_record = False
+            else:
+                if not black_list:
+                    self.do_record = True
+                    self.start_block()
+
+            if self.do_record and self.check_block_trigger():
                 self.trigger_new_block()
 
             if verbose:
@@ -68,6 +84,13 @@ class Recorder:
         now = time.time()
         return self.time_before_inactive < now - self.last_keyboard_stroke or \
                self.time_before_inactive < now - self.last_mouse_movement
+
+    def lookup_blacklist(self):
+        window_text = GetWindowText(GetForegroundWindow())
+        for element in self.recorder_blacklist:
+            if element in window_text.lower():
+                return True
+        return False
 
     def check_block_trigger(self):
         if self.last_window != GetWindowText(GetForegroundWindow()) \
@@ -83,11 +106,12 @@ class Recorder:
         self.last_date_time = str(list(time.localtime())[:-6])[1:-1].replace(", ", ";")
 
     def end_block(self):
-        self.handle = keyboard.stop_recording()
-        self.handler = None
-        self.keys_pressed = self.extract_keys_pressed(self.handle)
-        self.text_written = self.extract_text_written(self.handle)
-        self.output()
+        if self.handler:
+            self.handle = keyboard.stop_recording()
+            self.handler = None
+            self.keys_pressed = self.extract_keys_pressed(self.handle)
+            self.text_written = self.extract_text_written(self.handle)
+            self.output()
 
     def trigger_new_block(self):
         self.end_block()
