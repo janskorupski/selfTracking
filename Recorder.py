@@ -83,9 +83,10 @@ class Recorder:
         self.last_date_time = str(list(time.localtime())[:-6])[1:-1].replace(", ", ";")
 
     def end_block(self):
-        handle = keyboard.stop_recording()
-        self.keys_pressed = self.extract_keys_pressed(handle)
-        self.text_written = self.extract_text_written(handle)
+        self.handle = keyboard.stop_recording()
+        self.handler = False
+        self.keys_pressed = self.extract_keys_pressed(self.handle)
+        self.text_written = self.extract_text_written(self.handle)
         self.output()
 
     def trigger_new_block(self):
