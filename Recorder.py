@@ -78,6 +78,8 @@ class Recorder:
                 clear_output()
                 self.display_settings()
 
+        self.end_block()
+
         time.sleep(0.02)
 
     def check_active(self):
@@ -103,7 +105,7 @@ class Recorder:
         self.handler = keyboard.start_recording()
         self.last_block_trigger = time.time()
         self.last_window = GetWindowText(GetForegroundWindow())
-        self.last_date_time = str(list(time.localtime())[:-6])[1:-1].replace(", ", ";")
+        self.last_date_time = str(list(time.localtime())[:-2])[1:-1].replace(", ", ";")
 
     def end_block(self):
         if self.handler:
@@ -119,7 +121,8 @@ class Recorder:
 
     def output(self):
         report = self.generate_report()
-        with open(self.save_directory + "\\" + str(self.last_date_time).replace(";","-") + ".txt", "a", encoding="utf-8") as file:
+        just_date = "-".join( self.last_date_time.split(";")[:3] )
+        with open(self.save_directory + "\\" + just_date + ".txt", "a", encoding="utf-8") as file:
             file.write(report)
 
     def generate_report(self):
