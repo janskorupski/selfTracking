@@ -34,14 +34,17 @@ class Analyzer():
         pass
 
     def load_raw_data(self):
-        header = "year;month;day;hour;min;sec;weekday;secStart;secSpent;active;Window;textWritten".split(";")
+
+        header = "year;month;day;hour;min;sec;weekday;secStart;secSpent;active;Window;textWritten;keysPressed".split(";")
         self.raw_data = []
         for file in os.listdir(self.data_directory):
             if is_recorder_data(file):
                 self.raw_data.append(pd.read_csv(file, sep=";", index_col=None, names=header))
         self.raw_data = pd.concat(self.raw_data)
 
-
+        self.raw_data["textWritten"] = self.raw_data["textWritten"].fillna("")
+        self.raw_data["keysPressed"] = self.raw_data["keysPressed"].fillna("")
+        self.raw_data["Window"]      = self.raw_data["Window"].fillna("")
 
 if __name__ == "__main__":
     print(is_recorder_data(os.listdir()[4]))
