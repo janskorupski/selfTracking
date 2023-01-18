@@ -8,7 +8,7 @@ import pytest
 def test_output(monkeypatch):
 
     # during testing, we don't want to really record any data (especially since this only works on Windows)
-    monkeypatch.setattr("Recorder.GetWindowText", lambda: "mock window - aaa.txt")
+    monkeypatch.setattr("Recorder.GetWindowText", lambda *args: "mock window - aaa.txt")
     monkeypatch.setattr("Recorder.GetForegroundWindow", lambda: None)
 
     rec = Recorder.Recorder()
