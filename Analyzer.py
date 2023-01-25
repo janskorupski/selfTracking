@@ -80,8 +80,12 @@ class Analyzer():
                 common_start = max(block_times.start[block_pointer], time)
                 common_end = min(block_times.end[block_pointer], time + sample_frequency)
 
-                common_time = common_end - common_start
-                result.loc[time, :] += common_time / sample_frequency * statistics.iloc[block_pointer, :]
+                common_time = max(common_end - common_start , 0)
+                aa = common_time / sample_frequency * statistics.iloc[block_pointer, :]
+                result.loc[time, :] += aa
+
+                if common_time < 0:
+                    pass
 
                 block_pointer += 1
                 if block_pointer >= block_times.shape[0]:
@@ -103,4 +107,4 @@ if __name__ == "__main__":
     analyzer.load_raw_data()
     analyzer.raw_data
     aaa = analyzer.make_time_series([letters_per_second,words_per_second])
-    aaa
+    aaa.to_csv("time_series.csv", sep = ";")
