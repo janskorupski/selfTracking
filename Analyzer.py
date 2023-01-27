@@ -3,11 +3,13 @@ import numpy as np
 import pandas as pd
 from pandas import DataFrame
 
+import Janitor
+
 
 def is_recorder_data(file):
     if not os.path.isfile(file):
         return False
-    if not os.path.splitext('./data/2022-10-25.txt')[1] in [".txt",".csv"]:
+    if not os.path.splitext('./data/2022-10-25.txt')[1] in [".txt", ".csv"]:
         return False
     listed = file[:-4].split("-")
     if len(listed) != 3:
@@ -43,34 +45,45 @@ class Analyzer():
 
     def load_raw_data(self):
 
-        header = "year;month;day;hour;min;sec;weekday;secStart;secSpent;active;Window;textWritten;keysPressed".split(";")
+        header = "year;month;day;hour;min;sec;weekday;secStart;secSpent;active;Window;textWritten;keysPressed".split(
+            ";")
         self.raw_data = []
         for file in os.listdir(self.data_directory):
             file = os.path.join(self.data_directory, file)
             if is_recorder_data(file):
-                self.raw_data.append(pd.read_csv(file, sep=";", encoding="utf-8", index_col=None, names=header))
+
+                try:
+                    new_data = pd.read_csv(file, sep=";", encoding="utf-8", index_col=None, names=header)
+                except pd.errors.ParserError:
+                    Janitor.reseperate(file, new_seperator=chr(164))
+                    pd.read_csv(file, sep=chr(164), encoding="utf-8", index_col=None, names=header)
+                except:
+                    raise Exception(f"Cannot read file: {file} ")
+
+                self.raw_data.append(new_data)
+
         self.raw_data = pd.concat(self.raw_data)
 
         self.raw_data["textWritten"] = self.raw_data["textWritten"].fillna("")
         self.raw_data["keysPressed"] = self.raw_data["keysPressed"].fillna("")
-        self.raw_data["Window"]      = self.raw_data["Window"].fillna("")
+        self.raw_data["Window"] = self.raw_data["Window"].fillna("")
 
         self.raw_data = self.raw_data.reset_index()
 
+    def make_time_series(self, statistic, sample_frequency=60 * 1):
 
-    def make_time_series(self, statistic , sample_frequency = 60*1 ):
-
-        block_times = pd.DataFrame({"start": self.raw_data.secStart, "end": self.raw_data.secStart + self.raw_data.secSpent})
+        block_times = pd.DataFrame(
+            {"start": self.raw_data.secStart, "end": self.raw_data.secStart + self.raw_data.secSpent})
         block_times["duration"] = block_times.end - block_times.start
         block_times = block_times.reset_index()
 
         statistics = self.raw_data.apply(statistic, axis=1)
 
-        block_times = block_times.loc[ (statistics != 0).any(axis = 1) , : ]
-        statistics  = statistics.loc[  (statistics != 0).any(axis = 1) , : ]
+        block_times = block_times.loc[(statistics != 0).any(axis=1), :]
+        statistics = statistics.loc[(statistics != 0).any(axis=1), :]
 
         block_times = block_times.reset_index()
-        statistics  = statistics.reset_index()
+        statistics = statistics.reset_index()
 
         first_second = min(block_times.start)
         last_second = max(block_times.end)
@@ -85,7 +98,7 @@ class Analyzer():
                 common_start = max(block_times.start[block_pointer], time)
                 common_end = min(block_times.end[block_pointer], time + sample_frequency)
 
-                common_time = max(common_end - common_start , 0)
+                common_time = max(common_end - common_start, 0)
                 aa = common_time / sample_frequency * statistics.iloc[block_pointer, :]
                 result.loc[time, :] += aa
 
@@ -101,15 +114,18 @@ class Analyzer():
 
         return result
 
+
 def words_per_second(row):
-    return (len(row.textWritten.split(" ")) - 1)/row.secSpent
+    return (len(row.textWritten.split(" ")) - 1) / row.secSpent
+
 
 def letters_per_second(row):
-    return (len(row.textWritten))/row.secSpent
+    return (len(row.textWritten)) / row.secSpent
+
 
 if __name__ == "__main__":
     analyzer = Analyzer(data_directory="./data/")
     analyzer.load_raw_data()
     analyzer.raw_data
-    aaa = analyzer.make_time_series([letters_per_second,words_per_second])
-    aaa.to_csv("time_series.csv", sep = ";")
+    aaa = analyzer.make_time_series([letters_per_second, words_per_second])
+    aaa.to_csv("time_series.csv", sep=";")
