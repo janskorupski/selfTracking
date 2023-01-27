@@ -5,9 +5,9 @@ from pandas import DataFrame
 
 
 def is_recorder_data(file):
-    if len(file.split(".")) != 2:
+    if not os.path.isfile(file):
         return False
-    if not file.split(".")[1] == "txt":
+    if not os.path.splitext('./data/2022-10-25.txt')[1] in [".txt",".csv"]:
         return False
     listed = file[:-4].split("-")
     if len(listed) != 3:
@@ -16,6 +16,10 @@ def is_recorder_data(file):
         return False
     try:
         with open(file, "r", encoding="utf-8") as f:
+            if len(f.readline().split(";")) != 13:
+                return False
+    except UnicodeDecodeError:
+        with open(file, "r", encoding="ANSI") as f:
             if len(f.readline().split(";")) != 13:
                 return False
     except UnicodeDecodeError:
@@ -42,6 +46,7 @@ class Analyzer():
         header = "year;month;day;hour;min;sec;weekday;secStart;secSpent;active;Window;textWritten;keysPressed".split(";")
         self.raw_data = []
         for file in os.listdir(self.data_directory):
+            file = os.path.join(self.data_directory, file)
             if is_recorder_data(file):
                 self.raw_data.append(pd.read_csv(file, sep=";", encoding="utf-8", index_col=None, names=header))
         self.raw_data = pd.concat(self.raw_data)
@@ -103,7 +108,7 @@ def letters_per_second(row):
     return (len(row.textWritten))/row.secSpent
 
 if __name__ == "__main__":
-    analyzer = Analyzer()
+    analyzer = Analyzer(data_directory="./data/")
     analyzer.load_raw_data()
     analyzer.raw_data
     aaa = analyzer.make_time_series([letters_per_second,words_per_second])
