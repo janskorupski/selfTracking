@@ -31,14 +31,41 @@ def is_recorder_data(file):
 
 class Analyzer():
 
-    def __init__(self, data_directory=".", flag_data=None, raw_data=None):
+    def __init__(self, data_directory=".", flag_data=None, raw_data=None, flag_separator=chr(164)):
 
         self.data_directory = data_directory
         self.flag_data = flag_data
         if not self.flag_data:
-            if os.path.exists("flag_data.txt"):
-                self.flag_data = "flag_data.txt"
+            if os.path.exists("flag_data.csv"):
+                self.flag_data = "flag_data.csv"
         self.raw_data = raw_data
+
+        self.flag_separator = flag_separator
+
+    def update_flag_file(self):
+        all_windows = set(self.raw_data.Window)
+
+        if not self.flag_data:
+            self.flag_data = os.path.join(self.data_directory, "flag_data.csv")
+            with open(self.flag_data, "w", encoding="utf-8") as file:
+                pass
+
+        current_flags = [[],[]]
+        with open(self.flag_data, "r", encoding="utf-8") as file:
+            for line in file:
+                line.replace("\n","")
+                line = line.split(self.flag_separator)
+                current_flags[0].append(line[0])
+                current_flags[1].append(line[1])
+        for window in all_windows:
+            if window not in current_flags[0]:
+                current_flags[0].append(window)
+                current_flags[1].append("")
+        with open(self.flag_data, "w", encoding="utf-8") as file:
+            for i, window in enumerate(current_flags[0]):
+                line = window + self.flag_separator + current_flags[1][i] + "\n"
+                file.write(line)
+
 
     def setup_flags(self):
         pass
@@ -55,7 +82,7 @@ class Analyzer():
                 try:
                     new_data = pd.read_csv(file, sep=";", encoding="utf-8", index_col=None, names=header)
                 except pd.errors.ParserError:
-                    Janitor.reseperate(file, new_seperator=chr(164))
+                    Janitor.reseparate(file, new_seperator=chr(164))
                     pd.read_csv(file, sep=chr(164), encoding="utf-8", index_col=None, names=header)
                 except:
                     raise Exception(f"Cannot read file: {file} ")
@@ -127,5 +154,6 @@ if __name__ == "__main__":
     analyzer = Analyzer(data_directory="./data/")
     analyzer.load_raw_data()
     analyzer.raw_data
-    aaa = analyzer.make_time_series([letters_per_second, words_per_second])
-    aaa.to_csv("time_series.csv", sep=";")
+    analyzer.update_flag_file()
+    #aaa = analyzer.make_time_series([letters_per_second, words_per_second])
+    #aaa.to_csv("time_series.csv", sep=";")
