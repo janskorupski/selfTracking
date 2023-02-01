@@ -31,40 +31,93 @@ def is_recorder_data(file):
 
 class Analyzer():
 
-    def __init__(self, data_directory=".", flag_data=None, raw_data=None, flag_separator=chr(164)):
+    def __init__(self, data_directory=".", flag_data=None, raw_data=None, flag_rules=None, flag_separator=chr(164)):
 
         self.data_directory = data_directory
         self.flag_data = flag_data
+        self.flag_rules = flag_rules
+        self.hand_flagged_windows = None
+        self.flags = None
         if not self.flag_data:
-            if os.path.exists("flag_data.csv"):
-                self.flag_data = "flag_data.csv"
+            expected_path = os.path.join(self.data_directory, "hand_flagged_windows.csv")
+            if os.path.exists(expected_path):
+                self.hand_flagged_windows = expected_path
+        if not self.flag_data:
+            expected_path = os.path.join(self.data_directory, "flag_data.csv")
+            if os.path.exists(expected_path):
+                self.flag_data = expected_path
+        if not self.flag_rules:
+            expected_path = os.path.join(self.data_directory, "flag_rules.csv")
+            if os.path.exists(expected_path):
+                self.flag_rules = expected_path
         self.raw_data = raw_data
 
         self.flag_separator = flag_separator
 
     def update_flag_file(self):
+        # the method takes the 'flag rules' file as well as the 'hand_flagged_windows' file as input
+        #  (also adds missing, unflagged windows to the hand_flagged_windows file) and creates
+        #  'flag_data' file as output, to later be used during time series data creation
         all_windows = set(self.raw_data.Window)
 
+        #  if file does not exist, create an empty file
         if not self.flag_data:
             self.flag_data = os.path.join(self.data_directory, "flag_data.csv")
             with open(self.flag_data, "w", encoding="utf-8") as file:
-                pass
+                file.write(f"window{self.flag_separator}flag")
 
-        current_flags = [[],[]]
-        with open(self.flag_data, "r", encoding="utf-8") as file:
-            for line in file:
-                line.replace("\n","")
-                line = line.split(self.flag_separator)
-                current_flags[0].append(line[0])
-                current_flags[1].append(line[1])
+        #  if file does not exist, create an empty file
+        if not self.flag_rules:
+            self.flag_rules = os.path.join(self.data_directory, "flag_rules.csv")
+            with open(self.flag_rules, "w", encoding="utf-8") as file:
+                file.write(f"rule{self.flag_separator}flag")
+
+        #  if file does not exist, create an empty file
+        if not self.hand_flagged_windows:
+            self.hand_flagged_windows = os.path.join(self.data_directory, "hand_flagged_windows.csv")
+            with open(self.hand_flagged_windows, "w", encoding="utf-8") as file:
+                file.write(f"window{self.flag_separator}flag")
+
+        #  read the 'flag_data.csv' data
+        flag_data = pd.read_csv(self.flag_data, encoding="utf-8", sep=self.flag_separator, dtype='str', index_col=None)
+
+        #  read the 'hand_flagged_windows.csv' data
+        hand_flagged_windows = pd.read_csv(self.hand_flagged_windows, encoding="utf-8", sep=self.flag_separator, dtype='str', index_col=None)
+        hand_flagged_windows = hand_flagged_windows.fillna("")
+
+        #  read the 'flag_rules.csv' data
+        flag_rules = pd.read_csv(self.flag_rules, encoding="utf-8", sep=self.flag_separator, dtype='str', index_col=None)
+        flag_rules = flag_rules.fillna("")
+
+        #  set flags according to rules and list all remaining
+        unflagged_windows = []
+        self.flags = {}
         for window in all_windows:
-            if window not in current_flags[0]:
-                current_flags[0].append(window)
-                current_flags[1].append("")
-        with open(self.flag_data, "w", encoding="utf-8") as file:
-            for i, window in enumerate(current_flags[0]):
-                line = window + self.flag_separator + current_flags[1][i] + "\n"
-                file.write(line)
+            for idx, row in flag_rules.iterrows():
+                if row.rule in window:
+                    self.flags[window] = row.flag
+                    break
+            if window not in self.flags:
+                unflagged_windows.append(window)
+                self.flags[window] = ""
+
+        for idx, row in hand_flagged_windows.iterrows():
+            if row.flag != "":
+                self.flags[row.window] = row.flag
+
+        #  get rid of all the windows which were flagged by hand from 'unflagged_windows' list
+        unflagged_windows = [window for window in unflagged_windows if window not in hand_flagged_windows.window]
+        if len(unflagged_windows) > 0:
+            tmp_data_frame = pd.DataFrame({"window": unflagged_windows, "flag": ""})
+            hand_flagged_windows = pd.concat([hand_flagged_windows, tmp_data_frame])
+
+        #  update hand-flagging file
+        hand_flagged_windows.to_csv(self.hand_flagged_windows, encoding="utf-8", sep=self.flag_separator, index=False)
+
+        #  update flag data file
+        flag_dataFrame_to_save = pd.DataFrame( self.flags , index=[1] ).T.reset_index()
+        flag_dataFrame_to_save.columns = ["window", "flag"]
+        flag_dataFrame_to_save.to_csv(self.flag_data, encoding="utf-8", sep=self.flag_separator, index=False)
 
 
     def setup_flags(self):
