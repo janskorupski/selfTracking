@@ -120,9 +120,6 @@ class Analyzer():
         flag_dataFrame_to_save.to_csv(self.flag_data, encoding="utf-8", sep=self.flag_separator, index=False)
 
 
-    def setup_flags(self):
-        pass
-
     def load_raw_data(self):
 
         header = "year;month;day;hour;min;sec;weekday;secStart;secSpent;active;Window;textWritten;keysPressed".split(
