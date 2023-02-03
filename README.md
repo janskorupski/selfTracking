@@ -15,12 +15,11 @@ The aim of this package is to extract as much information from our computer acti
 Assuming you have python installed
 1. Find the 'Autostart folder' (usually located at C:\Users\<User>\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup).
 2. Create a new text file and change the extention to ".bat".
-3. write 'python ' and paste the location of the "selfTracking.py".
+3. write 'python ' and paste the location of the "Recorder.py".
 For conda or other enviornments users, you have to first add a line enabling the enviornment containing python (eg. "call conda activate <env name>")
 
 ## Future plans
 
-- finish the main program
 - add a measure of productivity
 - add a simple data visualisation module
 - add a task distinction mechanism

@@ -192,4 +192,4 @@ class Recorder:
 
 if __name__ == "__main__":
     rec = Recorder()
-    rec.record(maxTime=30)
+    rec.record(maxTime=60*60*24*31)
