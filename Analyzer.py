@@ -147,7 +147,13 @@ class Analyzer():
 
         self.raw_data = self.raw_data.reset_index()
 
-    def make_time_series(self, statistic, sample_frequency=60 * 1):
+    def assign_flags(self):
+        self.raw_data.loc[:,"flag"] = ""
+        for idx, row in self.raw_data.iterrows():
+            self.raw_data.loc[idx, "flag"] = self.flags[row.Window]
+
+    def make_time_series(self, statistic, sample_frequency=60 * 1, exclude_flags=["rest"]):
+
 
         block_times = pd.DataFrame(
             {"start": self.raw_data.secStart, "end": self.raw_data.secStart + self.raw_data.secSpent})
@@ -191,13 +197,15 @@ class Analyzer():
 
         return result
 
+def resting(row):
+    return 1 if row.flag == 'rest' else 0
 
 def words_per_second(row):
-    return (len(row.textWritten.split(" ")) - 1) / row.secSpent
+    return (len(row.textWritten.split(" ")) - 1) / row.secSpent if row.flag != 'rest' else 0
 
 
 def letters_per_second(row):
-    return (len(row.textWritten)) / row.secSpent
+    return (len(row.textWritten)) / row.secSpent if row.flag != 'rest' else 0
 
 
 if __name__ == "__main__":
@@ -205,5 +213,6 @@ if __name__ == "__main__":
     analyzer.load_raw_data()
     analyzer.raw_data
     analyzer.update_flag_file()
-    #aaa = analyzer.make_time_series([letters_per_second, words_per_second])
-    #aaa.to_csv("time_series.csv", sep=";")
+    analyzer.assign_flags()
+    aaa = analyzer.make_time_series([letters_per_second, words_per_second, resting])
+    aaa.to_csv("time_series.csv", sep=";")
