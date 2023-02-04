@@ -3,8 +3,6 @@ import numpy as np
 import pandas as pd
 from pandas import DataFrame
 
-import Janitor
-
 
 def is_recorder_data(file):
     if not os.path.isfile(file):

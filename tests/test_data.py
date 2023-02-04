@@ -1,9 +1,8 @@
+import pytest
 import os.path
-
-import Recorder
+from src.selfTracking import Recorder
 import time
 import win32gui
-import pytest
 
 def test_output(monkeypatch):
 

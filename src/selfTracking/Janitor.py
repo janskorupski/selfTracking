@@ -3,7 +3,7 @@
 # the datafiles would sometimes contain some rows with too much apparent columns
 # this needs to be fixed. Here i replace the separator ";" with a new one chr(164) (it's printable, but not writable).
 # This also requires checking each line by hand and editing only lines with too many columns.
-def reseperate(file, source_seperator=";", new_seperator=chr(164), encoding="utf-8"):
+def reseparate(file, source_seperator=";", new_seperator=chr(164), encoding="utf-8"):
     data = []
     with open(file, "r", encoding=encoding) as f:
         for line in f:
@@ -23,4 +23,4 @@ def reseperate(file, source_seperator=";", new_seperator=chr(164), encoding="utf
             f.write(line)
 
 if __name__ == "__main__":
-    reseperate("2022-10-25.txt")
+    reseparate("2022-10-25.txt")
