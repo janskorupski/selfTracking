@@ -2,7 +2,7 @@ import os
 import numpy as np
 import pandas as pd
 from pandas import DataFrame
-import Janitor
+from .Janitor import *
 
 
 def is_recorder_data(file):
@@ -141,12 +141,11 @@ class Analyzer:
             if is_recorder_data(file):
 
                 try:
-                    new_data = pd.read_csv(file, sep=";", encoding="utf-8", index_col=None, names=header)
+                    new_data = pd.read_csv(file, sep=";", encoding="utf-8", index_col=None, names=header, quoting=3)
                 except pd.errors.ParserError:
-                    Janitor.reseparate(file, new_seperator=chr(164))
-                    new_data = pd.read_csv(file, sep=chr(164), encoding="utf-8", index_col=None, names=header)
-                except:
-                    raise Exception(f"Cannot read file: {file} ")
+                    reseparate(file, new_seperator=chr(164))
+                    new_data = pd.read_csv(file, sep=chr(164), encoding="utf-8", index_col=None, names=header,\
+                                           engine="python", quoting=3)
 
                 self.raw_data.append(new_data)
 
