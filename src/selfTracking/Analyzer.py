@@ -28,7 +28,7 @@ def is_recorder_data(file):
     return True
 
 
-class Analyzer():
+class Analyzer:
 
     def __init__(self, data_directory=".", flag_data=None, raw_data=None, flag_rules=None, flag_separator=chr(164)):
 
@@ -127,10 +127,9 @@ class Analyzer():
         hand_flagged_windows.to_csv(self.hand_flagged_windows, encoding="utf-8", sep=self.flag_separator, index=False)
 
         #  update flag data file
-        flag_dataFrame_to_save = pd.DataFrame( self.flags , index=[1] ).T.reset_index()
-        flag_dataFrame_to_save.columns = ["window", "flag"]
-        flag_dataFrame_to_save.to_csv(self.flag_data, encoding="utf-8", sep=self.flag_separator, index=False)
-
+        flag_data_frame_to_save = pd.DataFrame(self.flags, index=[1]).T.reset_index()
+        flag_data_frame_to_save.columns = ["window", "flag"]
+        flag_data_frame_to_save.to_csv(self.flag_data, encoding="utf-8", sep=self.flag_separator, index=False)
 
     def load_raw_data(self):
 
@@ -145,7 +144,7 @@ class Analyzer():
                     new_data = pd.read_csv(file, sep=";", encoding="utf-8", index_col=None, names=header)
                 except pd.errors.ParserError:
                     Janitor.reseparate(file, new_seperator=chr(164))
-                    pd.read_csv(file, sep=chr(164), encoding="utf-8", index_col=None, names=header)
+                    new_data = pd.read_csv(file, sep=chr(164), encoding="utf-8", index_col=None, names=header)
                 except:
                     raise Exception(f"Cannot read file: {file} ")
 
@@ -165,7 +164,6 @@ class Analyzer():
             self.raw_data.loc[idx, "flag"] = self.flags[row.Window]
 
     def make_time_series(self, statistic, sample_frequency=60 * 1, exclude_flags=["rest"]):
-
 
         block_times = pd.DataFrame(
             {"start": self.raw_data.secStart, "end": self.raw_data.secStart + self.raw_data.secSpent})
@@ -209,8 +207,10 @@ class Analyzer():
 
         return result
 
+
 def resting(row):
     return 1 if row.flag == 'rest' else 0
+
 
 def words_per_second(row):
     return (len(row.textWritten.split(" ")) - 1) / row.secSpent if row.flag != 'rest' else 0
@@ -223,7 +223,6 @@ def letters_per_second(row):
 if __name__ == "__main__":
     analyzer = Analyzer(data_directory="./data/")
     analyzer.load_raw_data()
-    analyzer.raw_data
     analyzer.update_flag_file()
     analyzer.assign_flags()
     aaa = analyzer.make_time_series([letters_per_second, words_per_second, resting])
