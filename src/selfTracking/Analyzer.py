@@ -2,6 +2,7 @@ import os
 import numpy as np
 import pandas as pd
 from pandas import DataFrame
+import Janitor
 
 
 def is_recorder_data(file):
@@ -77,14 +78,27 @@ class Analyzer():
                 file.write(f"window{self.flag_separator}flag")
 
         #  read the 'flag_data.csv' data
-        flag_data = pd.read_csv(self.flag_data, encoding="utf-8", sep=self.flag_separator, dtype='str', index_col=None)
+        flag_data = pd.read_csv(self.flag_data,\
+                                encoding="utf-8",\
+                                sep=self.flag_separator,\
+                                dtype='str', index_col=None,\
+                                engine="python")
 
         #  read the 'hand_flagged_windows.csv' data
-        hand_flagged_windows = pd.read_csv(self.hand_flagged_windows, encoding="utf-8", sep=self.flag_separator, dtype='str', index_col=None)
+        hand_flagged_windows = pd.read_csv(self.hand_flagged_windows,\
+                                           encoding="utf-8",\
+                                           sep=self.flag_separator,\
+                                           dtype='str', index_col=None,\
+                                           engine="python")
         hand_flagged_windows = hand_flagged_windows.fillna("")
 
         #  read the 'flag_rules.csv' data
-        flag_rules = pd.read_csv(self.flag_rules, encoding="utf-8", sep=self.flag_separator, dtype='str', index_col=None)
+        flag_rules = pd.read_csv(self.flag_rules,\
+                                 encoding="utf-8",\
+                                 sep=self.flag_separator,\
+                                 dtype='str', index_col=None,\
+                                 engine="python")
+
         flag_rules = flag_rules.fillna("")
 
         #  set flags according to rules and list all remaining
