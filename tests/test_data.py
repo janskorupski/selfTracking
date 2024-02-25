@@ -16,7 +16,7 @@ def test_output(monkeypatch):
     # the expected filename of the log
     file = str(list(time.localtime())[:-6])[1:-1].replace(", ", "-") + ".txt"
 
-    # first, check wether the log even exists
+    # first, check whether the log even exists
     assert os.path.exists(file)
 
     # if id does, check if the number of columns matches the expected value

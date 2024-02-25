@@ -46,10 +46,13 @@ class Recorder:
         self.last_keyboard_stroke = time.time()
         self.last_text_length = 0
 
+        # system data
+        self.previous_time = time.time()
+
         # boolean ticks
         self.do_record = True
 
-    def record(self, maxTime=7 * 24 * 60 * 60, verbose = True):
+    def record(self, maxTime=4 * 7 * 24 * 60 * 60, verbose=True):
         self.starting_time_of_recording = time.time()
         self.start_block()
         while time.time() - self.starting_time_of_recording < maxTime:
@@ -71,12 +74,17 @@ class Recorder:
                     self.do_record = True
                     self.start_block()
 
+            # the main part
             if self.do_record and self.check_block_trigger():
+                self.trigger_new_block()
+            elif time.time() - self.previous_time > 1:
                 self.trigger_new_block()
 
             if verbose:
                 clear_output()
                 self.display_settings()
+
+            self.previous_time = time.time()
 
         self.end_block()
 
@@ -129,7 +137,7 @@ class Recorder:
         report = ""  # "year;month;day;hour;min;sec;weekday;secStart;secSpent;active;Window;textWritten\n"
         report += self.last_date_time + ";" + \
                   str(self.last_block_trigger) + ";" + \
-                  str(time.time() - self.last_block_trigger) + ";" + \
+                  str(self.previous_time - self.last_block_trigger) + ";" + \
                   str(self.last_active_state) + ";" + \
                   self.last_window + ";" + \
                   self.text_written + ";" + \
