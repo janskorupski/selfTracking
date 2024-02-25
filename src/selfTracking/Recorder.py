@@ -3,6 +3,8 @@ import keyboard
 import mouse
 from win32gui import GetWindowText, GetForegroundWindow
 import os
+import Statistics
+import hashlib
 
 
 def clear_output(wait=True):
@@ -22,13 +24,17 @@ class Recorder:
         self.max_block_time = maxBlockTime
         self.time_before_inactive = timeInactive
         self.save_directory = saveDir
-        self.recorder_blacklist = [] # list of windows, for which no recording should be made
+        self.statistics = [Statistics.textWritten_stat, Statistics.keysPressed_stat]
+        self.recorder_blacklist = []  # list of windows, for which no recording should be made
         if os.path.exists("recorder_blacklist.txt"):
             with open( "recorder_blacklist.txt", "r") as file:
                 for line in file.readlines():
                     self.recorder_blacklist.append(line.lower())
-
         self.starting_time_of_recording = time.time()
+        self.recorder_id = ""
+        for stat in self.statistics:
+            self.recorder_id += stat.name
+        self.recorder_id = hashlib.sha1(str.encode(self.recorder_id)).hexdigest()[:8]
 
         # block data
         self.last_block_trigger = time.time()
@@ -130,7 +136,15 @@ class Recorder:
     def output(self):
         report = self.generate_report()
         just_date = "-".join( self.last_date_time.split(";")[:3] )
-        with open(self.save_directory + "\\" + just_date + ".txt", "a", encoding="utf-8") as file:
+        dst_path = self.save_directory + "\\" + just_date + self.recorder_id + ".txt"
+        if not os.path.exists(dst_path):
+            with open(dst_path, "a", encoding="utf-8") as file:
+                header = "year;month;day;hour;min;sec;weekday;secStart;secSpent;active;Window"
+                for stat in self.statistics:
+                    header += ";" + stat.name
+                header += "\n"
+                file.write(header)
+        with open(dst_path, "a", encoding="utf-8") as file:
             file.write(report)
 
     def generate_report(self):
@@ -139,9 +153,11 @@ class Recorder:
                   str(self.last_block_trigger) + ";" + \
                   str(self.previous_time - self.last_block_trigger) + ";" + \
                   str(self.last_active_state) + ";" + \
-                  self.last_window + ";" + \
-                  self.text_written + ";" + \
-                  self.keys_pressed + "\n"
+                  self.last_window
+
+        for stat in self.statistics:
+            report += ";" + stat.calculate(self.keys_pressed, self.text_written)
+        report += "\n"
         return report
 
     def extract_keys_pressed(self, handle):
