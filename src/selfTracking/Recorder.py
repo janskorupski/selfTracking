@@ -24,10 +24,10 @@ class Recorder:
         self.max_block_time = maxBlockTime
         self.time_before_inactive = timeInactive
         self.save_directory = saveDir
-        self.statistics = [Statistics.textWritten_stat, Statistics.keysPressed_stat]
+        self.statistics = Statistics.all_stats
         self.recorder_blacklist = []  # list of windows, for which no recording should be made
         if os.path.exists("recorder_blacklist.txt"):
-            with open( "recorder_blacklist.txt", "r") as file:
+            with open("recorder_blacklist.txt", "r") as file:
                 for line in file.readlines():
                     self.recorder_blacklist.append(line.lower())
         self.starting_time_of_recording = time.time()
@@ -156,7 +156,7 @@ class Recorder:
                   self.last_window
 
         for stat in self.statistics:
-            report += ";" + stat.calculate(self.keys_pressed, self.text_written)
+            report += ";" + str(stat.calculate(self.keys_pressed, self.text_written))
         report += "\n"
         return report
 
