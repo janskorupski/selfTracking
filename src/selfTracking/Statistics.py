@@ -14,7 +14,7 @@ class Statistic:
 
 textWritten_stat = Statistic("textWritten", lambda keysPressed, textWritten: textWritten)
 keysPressed_stat = Statistic("keysPressed", lambda keysPressed, textWritten: keysPressed)
-symbolCount_stat = Statistic("keysPressed", lambda keysPressed, textWritten: len(textWritten))
+symbolCount_stat = Statistic("symbolCount", lambda keysPressed, textWritten: len(textWritten))
 
 def average_word_length(textWritten):
     words = words_only.findall(textWritten)
