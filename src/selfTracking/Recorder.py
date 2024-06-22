@@ -3,8 +3,9 @@ import keyboard
 import mouse
 from win32gui import GetWindowText, GetForegroundWindow
 import os
-import Statistics
+from .Statistics import *
 import hashlib
+import configparser
 
 
 def clear_output(wait=True):
@@ -18,13 +19,23 @@ def clear_output(wait=True):
 # Also, there is an upper limit of block time.
 class Recorder:
 
-    def __init__(self, maxBlockTime=2 * 60, timeInactive=2 * 60, saveDir="."):
+    def __init__(self, maxBlockTime=2 * 60, timeInactive=2 * 60, saveDir=".", settingsPath="./settings.ini"):
 
         # Parameters (settings)
         self.max_block_time = maxBlockTime
         self.time_before_inactive = timeInactive
         self.save_directory = saveDir
-        self.statistics = Statistics.all_stats
+        self.settings_path = settingsPath
+        self.statistics = all_stats[2:]
+        self.config = configparser.ConfigParser()
+
+        if os.path.exists(self.settings_path):
+            self.read_settings()
+            self.statistics = [stat for stat in all_stats if self.config.getboolean("statistics", stat.name)]
+            self.max_block_time = self.config.getint("settings", "maxBlockTime")
+            self.time_before_inactive = self.config.getint("settings", "timeInactive")
+            self.save_directory = self.config.get("settings", "saveDir")
+
         self.recorder_blacklist = []  # list of windows, for which no recording should be made
         if os.path.exists("recorder_blacklist.txt"):
             with open("recorder_blacklist.txt", "r") as file:
@@ -67,6 +78,19 @@ class Recorder:
                 self.end_block()
                 print("exit")
                 break
+            if os.path.exists(self.settings_path):
+                self.read_settings()
+                if not self.config.getboolean("active", "record"):
+                    self.end_block()
+                    self.config["active"]["isrecording"] = "False"
+                    with open(self.settings_path, "w") as file:
+                        self.config.write(file)
+                    break
+                if not self.config.getboolean("active", "isrecording"):
+                    self.config["active"]["isrecording"] = "True"
+                    with open(self.settings_path, "w") as file:
+                        self.config.write(file)
+
 
             self.update_activity()
 
@@ -197,6 +221,9 @@ class Recorder:
     def get_parameters(self):
         pass
 
+    def read_settings(self):
+        if os.path.exists(self.settings_path):
+            self.config.read(self.settings_path)
     def display_settings(self):
         setting_string = "|| settings    ||\n"
         setting_string += f"|| refresh rate  : {self.max_block_time}\n"
