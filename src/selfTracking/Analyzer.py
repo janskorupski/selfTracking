@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from pandas import DataFrame
 from .Janitor import *
+from tqdm.auto import tqdm
 
 
 def is_recorder_data(file):
@@ -30,11 +31,14 @@ def is_recorder_data(file):
 
 class Analyzer:
 
-    def __init__(self, data_directory=".", flag_data=None, raw_data=None, flag_rules=None, flag_separator=chr(164)):
+    def __init__(self, data_directory=".", flag_data=None, raw_data=None, flag_rules=None, flag_separator=chr(164),
+                 verbose=True):
 
         self.data_directory = data_directory
         self.flag_data = flag_data
         self.flag_rules = flag_rules
+        self.verbose = verbose
+
         self.hand_flagged_windows = None
         self.flags = None
         if not self.flag_data:
@@ -104,7 +108,12 @@ class Analyzer:
         #  set flags according to rules and list all remaining
         unflagged_windows = []
         self.flags = {}
-        for window in all_windows:
+
+        iterable=all_windows
+        if self.verbose:
+            iterable = tqdm(iterable)
+
+        for window in iterable:
             for idx, row in flag_rules.iterrows():
                 if row.rule in window:
                     self.flags[window] = row.flag
@@ -136,7 +145,12 @@ class Analyzer:
         header = "year;month;day;hour;min;sec;weekday;secStart;secSpent;active;Window;textWritten;keysPressed".split(
             ";")
         self.raw_data = []
-        for file in os.listdir(self.data_directory):
+
+        iterable = os.listdir(self.data_directory)
+        if self.verbose:
+            iterable = tqdm(iterable)
+
+        for file in iterable:
             file = os.path.join(self.data_directory, file)
             if is_recorder_data(file):
 
@@ -158,8 +172,13 @@ class Analyzer:
         self.raw_data = self.raw_data.reset_index()
 
     def assign_flags(self):
-        self.raw_data.loc[:,"flag"] = ""
-        for idx, row in self.raw_data.iterrows():
+        self.raw_data.loc[:, "flag"] = ""
+
+        iterable = self.raw_data.iterrows()
+        if self.verbose:
+            iterable = tqdm(iterable, total=self.raw_data.shape[0])
+
+        for idx, row in iterable:
             self.raw_data.loc[idx, "flag"] = self.flags[row.Window]
 
     def make_time_series(self, statistic, sample_frequency=60 * 1, exclude_flags=["rest"]):
@@ -185,7 +204,12 @@ class Analyzer:
         result.index = sample_time
 
         block_pointer = 0
-        for time in sample_time:
+
+        iterable = sample_time
+        if self.verbose:
+            iterable = tqdm(iterable)
+
+        for time in iterable:
             while block_times.start[block_pointer] <= time + sample_frequency:
                 common_start = max(block_times.start[block_pointer], time)
                 common_end = min(block_times.end[block_pointer], time + sample_frequency)
